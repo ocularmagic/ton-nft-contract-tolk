@@ -115,7 +115,7 @@ fun onInternalMessage(msgFull: cell, msgBody: slice) {
         var has_item = 1;
         do {
             var item_index = 0;
-            var item = null as slice;
+            var item = begin_cell().end_cell().begin_parse();
             (deploy_list, item_index, item, has_item) = udict_delete_get_min(deploy_list, 64);
             if (has_item != 0) {
                 counter += 1;
