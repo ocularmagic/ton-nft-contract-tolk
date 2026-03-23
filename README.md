@@ -8,9 +8,18 @@ Reference implementation of NFT (non-fungible token) smart contract for TON.
 
 # Compile
 
-The active TypeScript toolchain compiles the Tolk collection and item contracts into the root `build/` directory for use by tests and scripts.
+The active TypeScript toolchain uses Blueprint's Tolk compiler configuration for both contracts and writes the artifacts into the root `build/` directory for use by tests and scripts.
 
 # Simple testnet NFT minting template
+
+Run all contract builds at once with:
+
+```bash
+npm run build
+```
+
+This now maps to `blueprint build --all`, so Blueprint does not stop to ask you to pick a single contract interactively.
+
 
 This repo can be used to deploy a basic NFT collection and mint simple off-chain NFTs on TON testnet using metadata and images that you host yourself.
 
