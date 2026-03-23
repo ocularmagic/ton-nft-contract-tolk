@@ -1,4 +1,4 @@
-tolk 1.0
+tolk 1.2
 
 @pure
 fun begin_cell(): builder
@@ -17,7 +17,7 @@ fun my_address(): slice
 fun get_data(): cell
     asm "c4 PUSH"
 
-fun set_data(c: cell)
+fun set_data(c: cell): void
     asm "c4 POP"
 
 @pure

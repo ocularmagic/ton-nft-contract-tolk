@@ -1,4 +1,4 @@
-tolk 1.0
+tolk 1.2
 
 const OP_TRANSFER = 0x5fcc3d14;
 const OP_OWNERSHIP_ASSIGNED = 0x05138d91;
