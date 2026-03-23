@@ -24,7 +24,7 @@ fun set_data(c: cell): void
 fun cell_hash(c: cell): int
     asm "HASHCU"
 
-fun send_raw_message(msg: cell, mode: int)
+fun send_raw_message(msg: cell, mode: int): void
     asm "SENDRAWMSG"
 
 @pure
