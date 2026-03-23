@@ -1,4 +1,4 @@
-tolk 1.0
+tolk 1.2
 
 import "imports/compat"
 import "imports/op-codes"
