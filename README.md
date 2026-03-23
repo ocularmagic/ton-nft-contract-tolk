@@ -2,13 +2,13 @@
 
 Reference implementation of NFT (non-fungible token) smart contract for TON.
 
-`nft-collection.fc` - basic implementation of immutable NFT collection with royalty.
+`nft/nft-collection.tolk` - basic implementation of immutable NFT collection with royalty.
 
-`nft-item.fc` - basic implementation of immutable NFT item.
+`nft/nft-item.tolk` - basic implementation of immutable NFT item.
 
 # Compile
 
-The active TypeScript toolchain compiles the collection and item contracts into the root `build/` directory for use by tests and scripts.
+The active TypeScript toolchain compiles the Tolk collection and item contracts into the root `build/` directory for use by tests and scripts.
 
 # Simple testnet NFT minting template
 
