@@ -14,7 +14,7 @@ fun load_data(): (int, int, slice, slice, cell) {
     if (slice_bits(ds) > 0) {
         return (-1, index, collection_address, ds.load_msg_addr(), ds.load_ref());
     } else {
-        return (0, index, collection_address, null as slice, null as cell);
+        return (0, index, collection_address, begin_cell().end_cell().begin_parse(), begin_cell().end_cell());
     }
 }
 
@@ -29,7 +29,7 @@ fun store_data(index: int, collection_address: slice, owner_address: slice, cont
     );
 }
 
-fun send_msg(to_address: slice, amount: int, op: int, query_id: int, payload: builder, send_mode: int) {
+fun send_msg(to_address: slice, amount: int, op: int, query_id: int, payload: builder, send_mode: int, has_payload: int) {
     var msg = begin_cell()
         .store_uint(0x10, 6)
         .store_slice(to_address)
@@ -38,7 +38,7 @@ fun send_msg(to_address: slice, amount: int, op: int, query_id: int, payload: bu
         .store_uint(op, 32)
         .store_uint(query_id, 64);
 
-    if (builder_nullQ(payload) == 0) {
+    if (has_payload != 0) {
         msg.store_builder(payload);
     }
 
@@ -74,13 +74,14 @@ fun transfer_ownership(my_balance: int, index: int, collection_address: slice, o
             OP_OWNERSHIP_ASSIGNED,
             query_id,
             begin_cell().store_slice(owner_address).store_slice(msg_body),
+            1,
             1
         );
     }
 
     if (need_response) {
         force_chain(response_destination);
-        send_msg(response_destination, rest_amount, OP_EXCESSES, query_id, null as builder, 1);
+        send_msg(response_destination, rest_amount, OP_EXCESSES, query_id, begin_cell(), 1, 0);
     }
 
     store_data(index, collection_address, new_owner_address, content);
@@ -126,7 +127,8 @@ fun onInternalMessage(my_balance: int, msg_value: int, msg_full: cell, msg_body:
             OP_REPORT_STATIC_DATA,
             query_id,
             begin_cell().store_uint(index, 256).store_slice(collection_address),
-            64
+            64,
+            1
         );
         return;
     }

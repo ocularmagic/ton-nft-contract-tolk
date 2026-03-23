@@ -1,0 +1,279 @@
+"Asm.fif" include
+// automatically generated from nft-item.tolk, compat.tolk, op-codes.tolk
+PROGRAM{
+  DECLPROC load_data()
+  0 DECLMETHOD onInternalMessage()
+  102351 DECLMETHOD get_nft_data()
+  // 4 functions inlined in-place:
+  // - force_chain (2 calls)
+  // - store_data (2 calls)
+  // - send_msg (3 calls)
+  // - transfer_ownership (1 call)
+  load_data() PROC:<{
+    c4 PUSH
+    CTOS
+    64 PUSHINT
+    LDUX
+    LDMSGADDR
+    DUP
+    SBITS
+    0 GTINT
+    IFJMP:<{
+      -1 PUSHINT
+      SWAP
+      LDMSGADDR
+      PLDREF
+      s2 s4 XCHG
+      s2 s3 XCHG
+    }>
+    DROP
+    0 PUSHINT
+    x{} PUSHSLICE
+    <b b> PUSHREF
+    s2 s4 XCHG
+    s2 s3 XCHG
+  }>
+  onInternalMessage() PROC:<{
+    s2 POP
+    OVER
+    SEMPTY
+    0 NEQINT
+    IFJMP:<{
+      3 BLKDROP
+    }>
+    CTOS
+    4 PUSHINT
+    LDUX
+    SWAP
+    1 PUSHINT
+    AND
+    0 NEQINT
+    IFJMP:<{
+      3 BLKDROP
+    }>
+    LDMSGADDR
+    LDMSGADDR
+    NIP
+    LDVARUINT16
+    NIP
+    1 PUSHINT
+    SDSKIPFIRST
+    LDVARUINT16
+    NIP
+    LDVARUINT16
+    DROP
+    3 PUSHINT
+    2 PUSHINT
+    MULDIV
+    load_data() CALLDICT
+    s0 s4 XCHG
+    0 EQINT
+    IFJMP:<{
+      DROP
+      2 2 BLKDROP2
+      s4 POP
+      s3 s1 PUXC
+      SDEQ
+      405 THROWIFNOT
+      SWAP
+      LDMSGADDR
+      PLDREF
+      s0 s2 XCHG
+      NEWC
+      64 PUSHINT
+      STUX
+      s0 s3 XCHG2
+      STSLICER
+      ROT
+      STSLICER
+      STREF
+      ENDC
+      c4 POP
+    }>
+    s0 s6 XCHG
+    32 PUSHINT
+    LDUX
+    64 PUSHINT
+    LDUX
+    s2 PUSH
+    1607220500 PUSHINT
+    EQUAL
+    IFJMP:<{
+      s2 POP
+      s6 s7 XCPU
+      SDEQ
+      401 THROWIFNOT
+      LDMSGADDR
+      OVER
+      REWRITESTDADDR
+      DROP
+      0 PUSHINT
+      EQUAL
+      333 THROWIFNOT
+      LDMSGADDR
+      1 PUSHINT
+      LDIX
+      NIP
+      LDVARUINT16
+      DUP
+      SBITS
+      0 GTINT
+      708 THROWIFNOT
+      50000000 PUSHINT
+      s1 s11 XCHG
+      SUB
+      OVER
+      0 NEQINT
+      IF:<{
+        s1 s7 PUSH2
+        ADD
+        SUB
+      }>
+      s2 PUSH
+      2 PUSHINT
+      PLDUX
+      0 NEQINT
+      DUP
+      IF:<{
+        s0 s8 XCHG
+        SUB
+      }>ELSE<{
+        s8 POP
+      }>
+      DUP
+      -1 GTINT
+      402 THROWIFNOT
+      OVER
+      0 NEQINT
+      IF:<{
+        85167505 PUSHINT
+        NEWC
+        s0 s11 XCHG2
+        STSLICER
+        s0 s11 XCHG2
+        STSLICER
+        1 PUSHINT
+        16 PUSHINT
+        NEWC
+        6 PUSHINT
+        STUX
+        s5 PUSH
+        STSLICER
+        s0 s3 XCHG2
+        STVARUINT16
+        0 PUSHINT
+        SWAP
+        107 PUSHINT
+        STUX
+        s1 s10 XCHG
+        32 PUSHINT
+        STUX
+        s8 s(-1) PUXC
+        64 PUSHINT
+        STUX
+        s0 s9 XCHG2
+        STBR
+        ENDC
+        s0 s8 XCHG2
+        SENDRAWMSG
+        s6 s7 XCHG
+      }>ELSE<{
+        s2 s10 XCHG
+        s9 POP
+        2DROP
+      }>
+      s0 s4 XCHG
+      IF:<{
+        s6 PUSH
+        REWRITESTDADDR
+        DROP
+        0 PUSHINT
+        EQUAL
+        333 THROWIFNOT
+        3576854235 PUSHINT
+        1 PUSHINT
+        16 PUSHINT
+        NEWC
+        6 PUSHINT
+        STUX
+        s0 s9 XCHG2
+        STSLICER
+        s0 s7 XCHG2
+        STVARUINT16
+        0 PUSHINT
+        SWAP
+        107 PUSHINT
+        STUX
+        s1 s6 XCHG
+        32 PUSHINT
+        STUX
+        s1 s4 XCHG
+        64 PUSHINT
+        STUX
+        ENDC
+        s0 s5 XCHG2
+        SENDRAWMSG
+        s1 s2 XCHG
+      }>ELSE<{
+        s2 s6 XCHG
+        s4 POP
+        s4 POP
+        DROP
+      }>
+      s0 s2 XCHG
+      NEWC
+      64 PUSHINT
+      STUX
+      STSLICE
+      STSLICE
+      STREF
+      ENDC
+      c4 POP
+    }>
+    DROP
+    s4 POP
+    s4 POP
+    s5 POP
+    s5 POP
+    SWAP
+    801842850 PUSHINT
+    EQUAL
+    IFJMP:<{
+      0 PUSHINT
+      2339837749 PUSHINT
+      s0 s5 XCHG
+      NEWC
+      8 PUSHPOW2
+      STUX
+      s0 s4 XCHG2
+      STSLICER
+      64 PUSHINT
+      16 PUSHINT
+      NEWC
+      6 PUSHINT
+      STUX
+      s0 s4 XCHG2
+      STSLICER
+      s0 s4 XCHG2
+      STVARUINT16
+      0 PUSHINT
+      SWAP
+      107 PUSHINT
+      STUX
+      s1 s4 XCHG
+      32 PUSHINT
+      STUX
+      s3 s0 s3 XC2PU
+      STUX
+      STB
+      ENDC
+      SWAP
+      SENDRAWMSG
+    }>
+    16 PUSHPOW2DEC
+    THROWANY
+  }>
+  get_nft_data() PROC:<{
+    load_data() CALLDICT
+  }>
+}END>c
