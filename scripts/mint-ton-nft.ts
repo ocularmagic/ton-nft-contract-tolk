@@ -1,22 +1,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { NetworkProvider } from '@ton/blueprint';
 import { Address, Cell, beginCell, toNano } from '@ton/core';
-import { mnemonicToPrivateKey } from '@ton/crypto';
-import { TonClient, WalletContractV5R1 } from '@ton/ton';
 import { NftCollection } from '../wrappers/NftCollection';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BUILD_DIR = path.join(REPO_ROOT, 'build');
 
-const ENDPOINT = process.env.ENDPOINT || 'https://testnet.toncenter.com/api/v2/jsonRPC';
-const MY_WALLET = process.env.MY_WALLET || '';
 const COLLECTION_METADATA_URL = process.env.COLLECTION_METADATA_URL || '';
 const COMMON_CONTENT_URL = process.env.COMMON_CONTENT_URL || '';
 const ITEM_FILE = process.env.ITEM_FILE || '0.json';
 const MODE = process.env.MODE || 'deploy';
 const COLLECTION_ADDRESS = process.env.COLLECTION_ADDRESS || '';
-const MNEMONIC = process.env.MNEMONIC || '';
-const TONCENTER_API_KEY = process.env.TONCENTER_API_KEY;
+const MY_WALLET = process.env.MY_WALLET || '';
 
 function requireEnv(name: string, value: string) {
     if (!value.trim()) {
@@ -30,49 +26,29 @@ function loadCompiledCell(filePath: string): Cell {
     return Cell.fromBoc(Buffer.from(json.hex, 'hex'))[0];
 }
 
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+function requireSenderAddress(provider: NetworkProvider): Address {
+    const senderAddress = provider.sender().address;
+
+    if (!senderAddress) {
+        throw new Error('Connected wallet address is unavailable. Re-run the script and reconnect your wallet.');
+    }
+
+    return senderAddress;
 }
 
-async function waitForSeqno(wallet: { getSeqno(): Promise<number> }, currentSeqno: number) {
-    for (let i = 0; i < 24; i++) {
-        await sleep(5000);
-        const seqno = await wallet.getSeqno();
-        if (seqno > currentSeqno) {
-            return;
+export async function run(provider: NetworkProvider) {
+    const connectedWalletAddress = requireSenderAddress(provider);
+
+    console.log('Connected wallet address:', connectedWalletAddress.toString());
+
+    if (MY_WALLET) {
+        const expectedWalletAddress = Address.parse(MY_WALLET);
+        console.log('Expected wallet address:', expectedWalletAddress.toString());
+
+        if (!connectedWalletAddress.equals(expectedWalletAddress)) {
+            throw new Error('Connected wallet does not match MY_WALLET. Please reconnect the correct wallet or update MY_WALLET.');
         }
     }
-    throw new Error('Timed out waiting for wallet seqno to increase');
-}
-
-async function main() {
-    const mnemonic = requireEnv('MNEMONIC', MNEMONIC);
-    const walletAddress = Address.parse(requireEnv('MY_WALLET', MY_WALLET));
-
-    const keyPair = await mnemonicToPrivateKey(mnemonic.trim().split(/\s+/));
-
-    const client = new TonClient({
-        endpoint: ENDPOINT,
-        apiKey: TONCENTER_API_KEY,
-    });
-
-    const wallet = WalletContractV5R1.create({
-        workchain: 0,
-        publicKey: keyPair.publicKey,
-        walletId: {
-            networkGlobalId: -3,
-        },
-    });
-
-    console.log('Derived sender address:', wallet.address.toString());
-    console.log('Expected wallet address:', walletAddress.toString());
-
-    if (wallet.address.toString() !== walletAddress.toString()) {
-        throw new Error('Derived wallet address does not match MY_WALLET. Check wallet version/network or mnemonic.');
-    }
-
-    const openedWallet = client.open(wallet);
-    const sender = openedWallet.sender(keyPair.secretKey);
 
     if (MODE === 'deploy') {
         const collectionMetadataUrl = requireEnv('COLLECTION_METADATA_URL', COLLECTION_METADATA_URL);
@@ -85,33 +61,32 @@ async function main() {
         const collectionCode = loadCompiledCell(path.join(BUILD_DIR, 'NftCollection.compiled.json'));
         const itemCode = loadCompiledCell(path.join(BUILD_DIR, 'NftItem.compiled.json'));
 
-        const collection = NftCollection.createFromConfig(
-            {
-                admin: walletAddress,
-                content: {
-                    type: 'offchain',
-                    uri: collectionMetadataUrl,
+        const collection = provider.open(
+            NftCollection.createFromConfig(
+                {
+                    admin: connectedWalletAddress,
+                    content: {
+                        type: 'offchain',
+                        uri: collectionMetadataUrl,
+                    },
+                    common_content: commonContentUrl,
+                    item_code: itemCode,
+                    royalty: {
+                        address: connectedWalletAddress,
+                        royalty_factor: 0,
+                        royalty_base: 1000,
+                    },
                 },
-                common_content: commonContentUrl,
-                item_code: itemCode,
-                royalty: {
-                    address: walletAddress,
-                    royalty_factor: 0,
-                    royalty_base: 1000,
-                },
-            },
-            collectionCode
+                collectionCode
+            )
         );
-
-        const openedCollection = client.open(collection);
 
         console.log('Collection address will be:', collection.address.toString());
 
-        const seqno = await openedWallet.getSeqno();
-        await openedCollection.sendDeploy(sender, toNano('0.05'));
+        await collection.sendDeploy(provider.sender(), toNano('0.05'));
 
-        console.log('Deploy tx sent. Waiting for confirmation...');
-        await waitForSeqno(openedWallet, seqno);
+        console.log('Deploy request sent. Approve it in your wallet if prompted...');
+        await provider.waitForDeploy(collection.address);
 
         console.log('Collection deployed at:', collection.address.toString());
         console.log(`Now run again with: MODE=mint COLLECTION_ADDRESS=${collection.address.toString()}`);
@@ -120,7 +95,7 @@ async function main() {
 
     if (MODE === 'mint') {
         const collectionAddress = Address.parse(requireEnv('COLLECTION_ADDRESS', COLLECTION_ADDRESS));
-        const collection = client.open(NftCollection.createFromAddress(collectionAddress));
+        const collection = provider.open(NftCollection.createFromAddress(collectionAddress));
 
         const data = await collection.getCollectionData();
         console.log('nextItemIndex =', data.nextItemIndex);
@@ -130,12 +105,11 @@ async function main() {
         }
 
         const mintIndex = BigInt(data.nextItemIndex);
-        const seqno = await openedWallet.getSeqno();
 
         await collection.sendDeployItem(
-            sender,
+            provider.sender(),
             {
-                owner: walletAddress,
+                owner: connectedWalletAddress,
                 content: beginCell().storeStringTail(ITEM_FILE).endCell(),
             },
             mintIndex,
@@ -143,8 +117,8 @@ async function main() {
             toNano('0.08')
         );
 
-        console.log('Mint tx sent. Waiting for confirmation...');
-        await waitForSeqno(openedWallet, seqno);
+        console.log('Mint request sent. Approve it in your wallet if prompted...');
+        await provider.waitForLastTransaction();
 
         const itemAddress = await collection.getNftAddressByIndex(mintIndex);
         console.log('Minted item index:', mintIndex.toString());
@@ -154,8 +128,3 @@ async function main() {
 
     throw new Error(`Unknown MODE: ${MODE}`);
 }
-
-main().catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
