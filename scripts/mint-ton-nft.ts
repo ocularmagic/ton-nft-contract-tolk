@@ -13,6 +13,8 @@ const ITEM_FILE = process.env.ITEM_FILE || '0.json';
 const MODE = process.env.MODE || 'deploy';
 const COLLECTION_ADDRESS = process.env.COLLECTION_ADDRESS || '';
 const MY_WALLET = process.env.MY_WALLET || '';
+const MINT_POLL_INTERVAL_MS = 5_000;
+const MINT_POLL_ATTEMPTS = 24;
 
 function requireEnv(name: string, value: string) {
     if (!value.trim()) {
@@ -24,6 +26,37 @@ function requireEnv(name: string, value: string) {
 function loadCompiledCell(filePath: string): Cell {
     const json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return Cell.fromBoc(Buffer.from(json.hex, 'hex'))[0];
+}
+
+
+type MintMonitor = {
+    getCollectionData(): Promise<{
+        nextItemIndex: number | bigint;
+    }>;
+};
+
+async function waitForMintedItem(collection: MintMonitor, expectedNextItemIndex: bigint) {
+    for (let attempt = 1; attempt <= MINT_POLL_ATTEMPTS; attempt++) {
+        const data = await collection.getCollectionData();
+
+        if (BigInt(data.nextItemIndex) >= expectedNextItemIndex) {
+            return;
+        }
+
+        if (attempt < MINT_POLL_ATTEMPTS) {
+            console.log(
+                `Waiting for mint confirmation... (${attempt}/${MINT_POLL_ATTEMPTS}) current nextItemIndex=${data.nextItemIndex}`
+            );
+            await new Promise((resolve) => setTimeout(resolve, MINT_POLL_INTERVAL_MS));
+        }
+    }
+
+    throw new Error(
+        `Mint transaction was sent but the collection index did not reach ${expectedNextItemIndex.toString()} within ${(
+            (MINT_POLL_INTERVAL_MS * MINT_POLL_ATTEMPTS) /
+            1000
+        ).toString()} seconds.`
+    );
 }
 
 function requireSenderAddress(provider: NetworkProvider): Address {
@@ -118,7 +151,7 @@ export async function run(provider: NetworkProvider) {
         );
 
         console.log('Mint request sent. Approve it in your wallet if prompted...');
-        await provider.waitForLastTransaction();
+        await waitForMintedItem(collection, mintIndex + 1n);
 
         const itemAddress = await collection.getNftAddressByIndex(mintIndex);
         console.log('Minted item index:', mintIndex.toString());
