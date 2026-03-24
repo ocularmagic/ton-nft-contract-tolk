@@ -1,19 +1,13 @@
 {
   "scripts": {
     "build": "npx blueprint build --all",
-    "test": "jest",
     "deploy": "npx blueprint run"
   },
   "devDependencies": {
     "@ton/blueprint": "^0.31.1",
     "@ton/core": "^0.63.1",
     "@ton/crypto": "^3.3.0",
-    "@ton/sandbox": "^0.28.0",
-    "@ton/test-utils": "^0.5.0",
     "@ton/ton": "^15.4.0",
-    "@types/jest": "^29.5.11",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
