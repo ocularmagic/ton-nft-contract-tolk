@@ -1,6 +1,6 @@
 # TON NFT Contract
 
-Reference implementation of NFT (non-fungible token) smart contract for TON.
+Reference implementation of NFT (non-fungible token) smart contract for TON, trimmed to the minimal files needed to compile, deploy a collection, and mint items from the included Blueprint script.
 
 `nft/nft-collection.tolk` - basic implementation of immutable NFT collection with royalty.
 
@@ -8,7 +8,9 @@ Reference implementation of NFT (non-fungible token) smart contract for TON.
 
 # Compile
 
-The active TypeScript toolchain uses Blueprint's Tolk compiler configuration for both contracts and writes the artifacts into the root `build/` directory for use by tests and scripts.
+The active TypeScript toolchain uses Blueprint's Tolk compiler configuration for both contracts and writes generated artifacts into the local `build/` directory.
+
+`build/` is intentionally ignored by git in this repo. You must run `npm run build` locally before using the deploy or mint script.
 
 # Simple testnet NFT minting template
 
@@ -19,7 +21,6 @@ npm run build
 ```
 
 This now maps to `blueprint build --all`, so Blueprint does not stop to ask you to pick a single contract interactively.
-
 
 This repo can be used to deploy a basic NFT collection and mint simple off-chain NFTs on TON testnet using metadata and images that you host yourself.
 
@@ -82,9 +83,17 @@ The per-item NFT content is stored as a raw file suffix like `0.json`, not a ful
 ## Prerequisites
 
 - Node.js installed
+- `npm install` run locally
 - testnet TON in your wallet
 - a TON wallet app that supports TON Connect and has testnet TON
 - hosted metadata and images (HTTPS, IPFS gateway, or another wallet-compatible public URL)
+
+Before deploy or mint:
+
+```bash
+npm install
+npm run build
+```
 
 ## Environment variables used by `scripts/mint-ton-nft.ts`
 
